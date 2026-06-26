@@ -52,12 +52,14 @@ public:
               float wheel_diameter, float robot_diameter);
     velocities getVelocities(float rps1, float rps2, float rps3, float rps4);
     rps getRPS(float linear_x, float linear_y, float angular_z, float imu_angular_z);
+    rps getRPS(float linear_x, float linear_y, float angular_z);
     float getMaxRPS();
     float toRad(float deg);
     float toDeg(float rad);
 
 private:
     rps calculateRPS(float linear_x, float linear_y, float angular_z, float imu_angular_z);
+    rps calculateRPS(float linear_x, float linear_y, float angular_z);
     int getTotalWheels(base robot_base);
     // keliling roda encoder 4.635 cm
     // 1024 ppr

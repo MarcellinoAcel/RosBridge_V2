@@ -2,6 +2,7 @@
 #define CONFIG_H
 
 // ROBOT CONFIGURATION
+#define ROBOT_BASE OMNI_3
 #define WHEEL_DIAMETER 0.1 // in meters
 #define ROBOT_DIAMETER 0.3 // in meters
 // MOTOR CONFIGURATION
@@ -9,11 +10,14 @@
 #define MAX_RPS_RATIO 0.8
 #define MOTOR_OPERATING_VOLTAGE 12.0
 #define MOTOR_POWER_MAX_VOLTAGE 12.0
+#define COUNTS_PER_REV1 755
+#define COUNTS_PER_REV2 755
+#define COUNTS_PER_REV3 755
 // PID CONFIGURATION
-#define PWM_MIN 0
+#define PWM_MIN -255
 #define PWM_MAX 255
-#define K_P 1.0
-#define K_I 0.0
+#define K_P 200.0
+#define K_I 20.0
 #define K_D 0.0
 
 #define DEBUG 1
@@ -21,12 +25,15 @@
 // MOTOR ENCODER PINS
 #define MOTOR1_ENC_A 22
 #define MOTOR1_ENC_B 23
-
 #define MOTOR2_ENC_A 18
 #define MOTOR2_ENC_B 19
-
 #define MOTOR3_ENC_A 34
 #define MOTOR3_ENC_B 35
+
+// Motor index aliases
+#define MOTOR_1 0
+#define MOTOR_2 1
+#define MOTOR_3 2
 
 // MOTOR CONTROL PINS
 #define Motor1_IN1 25

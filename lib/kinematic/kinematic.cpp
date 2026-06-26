@@ -55,6 +55,11 @@ Kinematic::rps Kinematic::getRPS(float linear_x, float linear_y, float angular_z
     return calculateRPS(linear_x, linear_y, angular_z, imu_angular_z);
 }
 
+Kinematic::rps Kinematic::getRPS(float linear_x, float linear_y, float angular_z)
+{
+    return calculateRPS(linear_x, linear_y, angular_z);
+}
+
 float Kinematic::getMaxRPS()
 {
     return max_rps_;
@@ -109,7 +114,7 @@ Kinematic::rps Kinematic::calculateRPS(float linear_x, float linear_y, float ang
     Kinematic::rps rps;
     float rps_motor1, rps_motor2, rps_motor3, rps_motor4;
     // calculate for the target motor rps and direction
-    if (OMNI)
+    if (base_platform_ == OMNI)
     {
         // front-left motor
         rps_motor1 = -sin(toRad(45 + imu_angular_z)) * x_mps + cos(toRad(45 + imu_angular_z)) * y_mps + robot_radius_ * tan_mps;
@@ -127,15 +132,109 @@ Kinematic::rps Kinematic::calculateRPS(float linear_x, float linear_y, float ang
         rps_motor4 = -sin(toRad(315 + imu_angular_z)) * x_mps + cos(toRad(315 + imu_angular_z)) * y_mps + robot_radius_ * tan_mps;
         rps.motor4 = fmax(-max_rps_, fmin(rps_motor4, max_rps_));
     }
-    else if (OMNI_3)
+    else if (base_platform_ == OMNI_3)
     {
-        rps_motor1 = -sin(toRad(0)) * x_mps + cos(toRad(0)) * y_mps + robot_radius_ * tan_mps;
+        rps_motor1 = -sin(toRad(30)) * x_mps + cos(toRad(30)) * y_mps + robot_radius_ * tan_mps;
         rps.motor1 = fmax(-max_rps_, fmin(rps_motor1, max_rps_));
 
-        rps_motor2 = -sin(toRad(120)) * x_mps + cos(toRad(120)) * y_mps + robot_radius_ * tan_mps;
+        rps_motor2 = -sin(toRad(150)) * x_mps + cos(toRad(150)) * y_mps + robot_radius_ * tan_mps;
         rps.motor2 = fmax(-max_rps_, fmin(rps_motor2, max_rps_));
 
-        rps_motor3 = -sin(toRad(240)) * x_mps + cos(toRad(240)) * y_mps + robot_radius_ * tan_mps;
+        rps_motor3 = -sin(toRad(270)) * x_mps + cos(toRad(270)) * y_mps + robot_radius_ * tan_mps;
+        rps.motor3 = fmax(-max_rps_, fmin(rps_motor3, max_rps_));
+
+        rps.motor4 = 0;
+    }
+    else
+    {
+        // front-left motor
+        rps_motor1 = x_mps - y_mps - tan_mps;
+        rps.motor1 = fmax(-max_rps_, fmin(rps_motor1, max_rps_));
+
+        // front-right motor
+        rps_motor2 = x_mps + y_mps + tan_mps;
+        rps.motor2 = fmax(-max_rps_, fmin(rps_motor2, max_rps_));
+
+        // rear-left motor
+        rps_motor3 = x_mps + y_mps - tan_mps;
+        rps.motor3 = fmax(-max_rps_, fmin(rps_motor3, max_rps_));
+
+        // rear-right motor
+        rps_motor4 = x_mps - y_mps + tan_mps;
+        rps.motor4 = fmax(-max_rps_, fmin(rps_motor4, max_rps_));
+    }
+
+    return rps;
+}
+
+Kinematic::rps Kinematic::calculateRPS(float linear_x, float linear_y, float angular_z)
+{
+
+    float tangential_vel = angular_z * (robot_circumference_);
+    // float tangential_vel = angular_z;
+
+    // convert m/s to m/min
+    float linear_vel_x_mins = linear_x;
+    float linear_vel_y_mins = linear_y;
+    // convert rad/s to rad/min
+    float tangential_vel_mins = tangential_vel;
+
+    float x_mps = linear_vel_x_mins / wheel_circumference_;
+    float y_mps = linear_vel_y_mins / wheel_circumference_;
+    float tan_mps = tangential_vel_mins / wheel_circumference_;
+
+    float a_x_mps = fabs(x_mps);
+    float a_y_mps = fabs(y_mps);
+    float a_tan_mps = fabs(tan_mps);
+
+    float xy_sum = a_x_mps + a_y_mps;
+    float xtan_sum = a_x_mps + a_tan_mps;
+    if (xy_sum >= max_rps_ && angular_z == 0)
+    {
+        float vel_scaler = max_rps_ / xy_sum;
+
+        x_mps *= vel_scaler;
+        y_mps *= vel_scaler;
+    }
+
+    else if (xtan_sum >= max_rps_ && linear_y == 0)
+    {
+        float vel_scaler = max_rps_ / xtan_sum;
+
+        x_mps *= vel_scaler;
+        tan_mps *= vel_scaler;
+    }
+
+    Kinematic::rps rps;
+    float rps_motor1, rps_motor2, rps_motor3, rps_motor4;
+    // calculate for the target motor rps and direction
+    if (base_platform_ == OMNI)
+    {
+        // front-left motor
+        rps_motor1 = -sin(toRad(45)) * x_mps + cos(toRad(45)) * y_mps + robot_radius_ * tan_mps;
+        rps.motor1 = fmax(-max_rps_, fmin(rps_motor1, max_rps_));
+
+        // rear-left motor
+        rps_motor2 = -sin(toRad(135)) * x_mps + cos(toRad(135)) * y_mps + robot_radius_ * tan_mps;
+        rps.motor2 = fmax(-max_rps_, fmin(rps_motor2, max_rps_));
+
+        // rear-right motor
+        rps_motor3 = -sin(toRad(225)) * x_mps + cos(toRad(225)) * y_mps + robot_radius_ * tan_mps;
+        rps.motor3 = fmax(-max_rps_, fmin(rps_motor3, max_rps_));
+
+        // front-right motor
+        rps_motor4 = -sin(toRad(315)) * x_mps + cos(toRad(315)) * y_mps + robot_radius_ * tan_mps;
+        rps.motor4 = fmax(-max_rps_, fmin(rps_motor4, max_rps_));
+    }
+    else if (base_platform_ == OMNI_3)
+    {
+        rps_motor1 = cos(toRad(30)) * x_mps + sin(toRad(30)) * y_mps + robot_radius_ * tan_mps;
+        rps.motor1 = fmax(-max_rps_, fmin(rps_motor1, max_rps_));
+
+        rps_motor2 = cos(toRad(150)) * x_mps + sin(toRad(150)) * y_mps + robot_radius_ * tan_mps;
+        rps.motor2 = fmax(-max_rps_, fmin(rps_motor2, max_rps_));
+
+        rps_motor3 = cos(toRad(270)) * x_mps + sin(toRad(270)) * y_mps + robot_radius_ * tan_mps;
         rps.motor3 = fmax(-max_rps_, fmin(rps_motor3, max_rps_));
     }
     else
